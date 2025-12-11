@@ -16,6 +16,8 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.mechanisms.AprilTagWebcam;
@@ -81,11 +83,15 @@ public class FTC2526 extends OpMode {
             boolean isEndGame;
     boolean db1 = false, db2 = false, cs = false, shu = false, shoo = false;
 
+    int cslpos = 96;
+    int weirdpidthingbecauseimlazy = 35;
+
     Telemetry.Item cslEncoder;
     Telemetry.Item shtrPwr;
     Telemetry.Item shtrStatus;
     Telemetry.Item tagstuff, tagMode;
     Telemetry.Item shU,shO;
+    ElapsedTime runtime = new ElapsedTime();
 
     @Override
     public void init() {
@@ -114,9 +120,9 @@ public class FTC2526 extends OpMode {
         drive = new Mecanum();
 
         Csl.setTargetPosition(0);
-        Csl.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(27,0,.175,0, MotorControlAlgorithm.PIDF));
+        Csl.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(weirdpidthingbecauseimlazy,0,.225,0, MotorControlAlgorithm.PIDF));
         Csl.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        Csl.setPositionPIDFCoefficients(27);
+        Csl.setPositionPIDFCoefficients(weirdpidthingbecauseimlazy);
         apriltags = new AprilTagWebcam();
         apriltags.init(hardwareMap, telemetry, "Shooter Cam");
 
@@ -229,7 +235,7 @@ public class FTC2526 extends OpMode {
                 Push.setPosition(0);
             }
 
-            if (endGame <= getRuntime() && !isEndGame) {
+            if (runtime.seconds() > endGame && !isEndGame) {
                 gamepad1.runRumbleEffect(new Gamepad.RumbleEffect.Builder()
                         .addStep(0.0, 1.0, 500)  //  Rumble right motor 100% for 500 mSec
                         .addStep(0.0, 0.0, 300)  //  Pause for 300 mSec
@@ -254,8 +260,8 @@ public class FTC2526 extends OpMode {
             shu = false;
             cs = true;
 //            Csl.setPower(.5);
-            pos = Csl.getCurrentPosition()+94;
-            Csl.setTargetPosition(Csl.getCurrentPosition()+94);
+            pos = Csl.getCurrentPosition()+cslpos;
+            Csl.setTargetPosition(Csl.getCurrentPosition()+cslpos);
 //            if (Csl.getCurrentPosition() <= (pos-2)) {
 //                Csl.setPower(0);
 //            } else {
@@ -276,8 +282,8 @@ public class FTC2526 extends OpMode {
             shu = false;
             cs = true;
 //            Csl.setPower(.5);
-            pos = Csl.getCurrentPosition()-94;
-            Csl.setTargetPosition(Csl.getCurrentPosition()-94);
+            pos = Csl.getCurrentPosition()-cslpos;
+            Csl.setTargetPosition(Csl.getCurrentPosition()-cslpos);
 //            if (Csl.getCurrentPosition() >= (pos+2)) {
 //                Csl.setPower(0);
 //            } else {
@@ -317,8 +323,8 @@ public class FTC2526 extends OpMode {
         shU.setValue(shu);
         shO.setValue(shoo);
 
-//        Shooter.setPower(dShooterPwr);
-        Shooter.setVelocity(dShooterPwr);
+        Shooter.setPower(dShooterPwr);
+//        Shooter.setVelocity(dShooterPwr);
         telemetry.update();
         apriltags.update();
 

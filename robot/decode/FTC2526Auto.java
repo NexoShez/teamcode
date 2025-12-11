@@ -18,8 +18,10 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.MotorControlAlgorithm;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -91,6 +93,10 @@ public class FTC2526Auto extends OpMode {
     AprilTagDetection mPPG = apriltag.getTagbyID(23);
 
     boolean selMotif;
+    double factor = .015;
+
+    int cslpos = 96;
+    int weirdpidthingbecauseimlazy = 35;
 
     boolean[] dbs = {
             false,
@@ -165,6 +171,9 @@ public class FTC2526Auto extends OpMode {
         drive = new Mecanum();
 
         Csl.setTargetPosition(0);
+        Csl.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(weirdpidthingbecauseimlazy,0,.175,0, MotorControlAlgorithm.PIDF));
+        Csl.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        Csl.setPositionPIDFCoefficients(weirdpidthingbecauseimlazy);
 
         Csl.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
@@ -249,9 +258,9 @@ public class FTC2526Auto extends OpMode {
 //        draw();
 
         if (apriltag.getTagRange(red) > apriltag.getTagRange(blue)) {
-            ShooterPwr = .02 * apriltag.getTagRange(red);
+            ShooterPwr = factor * apriltag.getTagRange(red);
         } else if (apriltag.getTagRange(red) < apriltag.getTagRange(blue)){
-            ShooterPwr = .02 * apriltag.getTagRange(blue);
+            ShooterPwr = factor * apriltag.getTagRange(blue);
         } else {
             ShooterPwr = 0;
         }
@@ -433,14 +442,17 @@ public class FTC2526Auto extends OpMode {
     public void autonomousPathUpdate() {
         switch (path) {
             case 0:
-                follower.followPath(forward);
-//                setPath(1);
+                if (!follower.isBusy()) {
+                    follower.followPath(forward);
+//                    setPath(-1);
+                }
                 break;
             case 1:
                 if (!follower.isBusy()) {
                     follower.followPath(leave);
 //                    setPath(-1);
                 }
+                break;
         }
     }
 
